@@ -55,6 +55,7 @@ public static class ModifiedUtf8
             {
                 if (char.IsHighSurrogate(c) && i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
                 {
+                    bytes[position++] = (byte)(0xE0 | ((c >> 12) & 0x0F));
                     bytes[position++] = (byte)(0x80 | ((c >> 6) & 0x3F));
                     bytes[position++] = (byte)(0x80 | (c & 0x3F));
 
