@@ -314,29 +314,27 @@ public class TagWriter : TagIO
         if (!string.IsNullOrEmpty(tag.Name) || tag.Parent is not null)
             WriteUTF8String(tag.Name);
     }
-        
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WriteUTF8String(string value)
     {
-        // String length prefixes never use ZigZag encoding
-            
         if (string.IsNullOrEmpty(value))
         {
             if (UseVarInt)
                 VarInt.Write(BaseStream, 0);
             else
-                BaseStream.Write(GetBytes((ushort) 0), 0, sizeof(ushort));
+                BaseStream.Write(GetBytes((ushort)0), 0, sizeof(ushort));
+            return;
         }
+
+        byte[] modifiedUtf8Bytes = ModifiedUtf8.GetBytes(value);
+
+        if (UseVarInt)
+            VarInt.Write(BaseStream, modifiedUtf8Bytes.Length);
         else
-        {
-            var utf8 = Encoding.UTF8.GetBytes(value);
-            if (UseVarInt)
-                VarInt.Write(BaseStream, utf8.Length);
-            else
-                BaseStream.Write(GetBytes((ushort) utf8.Length), 0, sizeof(ushort));
-                
-            BaseStream.Write(utf8, 0, utf8.Length);
-        }
+            BaseStream.Write(GetBytes((ushort)modifiedUtf8Bytes.Length), 0, sizeof(ushort));
+
+        BaseStream.Write(modifiedUtf8Bytes, 0, modifiedUtf8Bytes.Length);
     }
 
     /// <summary>
